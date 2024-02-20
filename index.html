@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <title>청년합숙소 저장소</title>
     <style>
@@ -13,7 +13,7 @@
         }
 
         #fileList {
-            width: min(100%, 1000px);
+            width: 1000px;
         }
 
         #fileList th {
@@ -28,6 +28,7 @@
         .td_folder,
         .td_file {
             cursor: pointer;
+            width: 500px;
         }
 
         .td_folder:hover,
@@ -48,23 +49,23 @@
         }
 
         .file_name {
-            width: min(50%, 500px);
+            width: 500px;
         }
 
         .file_modified {
-            width: min(25%, 250px);
+            width: 250px;
         }
 
         .file_stat {
-            width: min(10%, 100px);
+            width: 80px;
         }
 
         .file_size {
-            width: min(10%, 100px);
+            width: 100px;
         }
 
         .file_icons {
-            width: min(5%, 50px);
+            width: 70px;
             text-align: center;
         }
 
@@ -96,13 +97,13 @@
 
         header h1 {
             display: inline-block;
-            width: min(70%, 700px);
+            width: 700px;
             height: 50px;
             margin: 0;
         }
 
         #panel {
-            width: min(30%, 300px);
+            width: 300px;
             height: 50px;
             text-align: right;
             display: none;
@@ -121,12 +122,20 @@
             border: 1px solid black;
         }
 
+        #newdir_btn::before {
+            content: "📂 ";
+        }
+
+        #upload_btn::before {
+            content: "⬆️ ";
+        }
+
         #upload {
             display: none;
         }
 
         #progress {
-            width: min(100%, 1000px);
+            width: 1000px;
             text-align: right;
             padding-bottom: 10px;
             color: red;
@@ -136,7 +145,7 @@
             display: none;
             background-color: #eee;
             padding: 10px;
-            width: min(100% - 20px, 980px);
+            width: 980px;
             border-radius: 10px;
             margin-bottom: 10px;
         }
