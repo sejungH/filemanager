@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <title>청년합숙소 저장소</title>
+    <style>
+        html {
+            margin-left: 20px;
+        }
+
+        #fileList {
+            width: min(100%, 1000px);
+        }
+
+        #fileList th {
+            text-align: left;
+        }
+
+        #fileList th,
+        td {
+            padding: 5px 0;
+        }
+
+        .td_folder,
+        .td_file {
+            cursor: pointer;
+        }
+
+        .td_folder:hover,
+        .td_file:hover {
+            text-decoration: underline;
+        }
+
+        .td_folder::before {
+            content: "📁";
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        .td_file::before {
+            content: "📜";
+            margin-right: 10px;
+            display: inline-block;
+        }
+
+        .file_name {
+            width: min(50%, 500px);
+        }
+
+        .file_modified {
+            width: min(25%, 250px);
+        }
+
+        .file_stat {
+            width: min(10%, 100px);
+        }
+
+        .file_size {
+            width: min(10%, 100px);
+        }
+
+        .file_icons {
+            width: min(5%, 50px);
+            text-align: center;
+        }
+
+        .rename_icon,
+        .delete_icon {
+            cursor: pointer;
+        }
+
+        .rename_icon::before {
+            content: "✏️";
+        }
+
+        .delete_icon::before {
+            content: "🗑️";
+        }
+
+        #login label {
+            display: inline-block;
+        }
+
+        #password {
+            padding: 5px;
+        }
+
+        header {
+            padding: 20px 0;
+            display: flex;
+        }
+
+        header h1 {
+            display: inline-block;
+            width: min(70%, 700px);
+            height: 50px;
+            margin: 0;
+        }
+
+        #panel {
+            width: min(30%, 300px);
+            height: 50px;
+            text-align: right;
+            display: none;
+        }
+
+        #panel label {
+            display: inline-block;
+        }
+
+        #newdir_btn,
+        #upload_btn {
+            display: inline-block;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid black;
+        }
+
+        #upload {
+            display: none;
+        }
+
+        #progress {
+            width: min(100%, 1000px);
+            text-align: right;
+            padding-bottom: 10px;
+            color: red;
+        }
+
+        #path {
+            display: none;
+            background-color: #eee;
+            padding: 10px;
+            width: min(100% - 20px, 980px);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🗂️ 청년합숙소 저장소</h1>
+        <div id="panel">
+            <div id="newdir_btn">새 폴더</div>
+            <label for="upload">
+                <div id="upload_btn">파일 업로드</div>
+            </label>
+            <input type="file" name="upload" id="upload" onchange="uploadFile(this, 'C:/Users/hunis/web/files')">
+        </div>
+    </header>
+    <div id="login">
+        <label for="password">비밀번호</label>
+        <input type="password" name="password" id="password" />
+    </div>
+    <div id="progress"></div>
+    <div id="path"></div>
+    <table id="fileList"></table>
+
+    <script>
+        $("#password").keypress(function (e) {
+            if (e.which == 13) {
+                verify($(this).val())
+            }
+        });
+
+        function verify(password) {
+            $.post("/verify", { 'password': password })
+                .done(function () {
+                    $("#login").hide();
+                    openPath();
+                })
+                .fail(function () {
+                    console.log("Login Failed");
+                })
+        }
+
+        function openPath(path = "C:/Users/hunis/web/files") {
+            $.post("/files", { path: path })
+                .done(function (data) {
+                    displayStorage(JSON.parse(data), path);
+                })
+        }
+
+        function displayStorage(data, path) {
+            var fileList = document.getElementById("fileList");
+            clearTable(fileList, path);
+
+            var upload_div = document.getElementById("panel")
+            upload_div.style.display = "inline-block";
+            var upload = document.getElementById("upload")
+            upload.setAttribute("onchange", `uploadFile(this, '${path}')`)
+            var newdir_btn = document.getElementById("newdir_btn")
+            newdir_btn.setAttribute("onclick", `newDirectory('${path}')`)
+
+            var path_div = document.getElementById("path");
+            path_div.style.display = "block";
+            path_div.innerText = path;
+
+            data.forEach(file => {
+                if (file.stat == "folder") {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML += `<td class="td_folder" onclick="openPath('${file.path}')">${file.name}</td>`;
+                    tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
+                    tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
+                    tr.innerHTML += `<td class="file_size"></td>`;
+                    tr.innerHTML += `<td class="file_icons">
+                            <span class="rename_icon" onclick="renameFile('${file.name}', '${parentPath(file.path)}')"></span>
+                            <span class="delete_icon" onclick="deleteFolder('${file.path}')"></span>
+                        </td>`;
+                    fileList.append(tr);
+                }
+            })
+            data.forEach(file => {
+                if (file.stat == "file") {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML += `<td class="td_file" onclick="downloadFile('${file.name}', '${file.path}')">${file.name}</td>`;
+                    tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
+                    tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
+                    tr.innerHTML += `<td class="file_size">${convertFileSize(file.size)}</td>`;
+                    tr.innerHTML += `<td class="file_icons">
+                            <span class="rename_icon" onclick="renameFile('${file.name}', '${parentPath(file.path)}')"></span>
+                            <span class="delete_icon" onclick="deleteFile('${file.path}')"></span>
+                        </td>`;
+                    fileList.append(tr);
+                }
+            })
+        }
+
+        function uploadFile(event, path) {
+            for (var i = 0; i < event.files.length; i++) {
+                var file = event.files[i];
+                var formData = new FormData();
+                formData.append('path', path)
+                formData.append('file', file);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/upload', true);
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        var percentComplete = (e.loaded / e.total) * 100;
+                        document.getElementById('progress').innerText = '업로드 중: ' + percentComplete.toFixed(2) + '%';
+                    }
+                };
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        alert("파일이 성공적으로 업로드 되었습니다");
+                        document.getElementById('progress').innerText = "";
+                        openPath(path);
+                    } else {
+                        alert("파일 업로드에 실패했습니다");
+                    }
+                };
+                xhr.send(formData);
+            }
+        }
+
+        function renameFile(filename, path) {
+            var newName = window.prompt("이름 변경:", filename)
+            if (newName)
+                $.post("/rename", { path: path, oldName: filename, newName: newName })
+                    .done(function () {
+                        openPath(path);
+                    })
+                    .fail(function () {
+                        alert("파일 이름 변경에 실패했습니다");
+                    })
+        }
+
+        function downloadFile(filename, path) {
+            var link = document.createElement('a');
+            link.href = "/download?path=" + path;
+            link.download = filename;
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function deleteFile(path) {
+            if (confirm(`'${path}'을 삭제합니다`)) {
+                $.post("/delete", { path: path })
+                    .done(function () {
+                        openPath(parentPath(path));
+                    })
+                    .fail(function () {
+                        alert("파일 삭제에 실패했습니다");
+                    })
+            }
+        }
+
+        function deleteFolder(path) {
+            if (confirm(`'${path}'을 삭제합니다`)) {
+                $.post("/deleteDirectory", { path: path })
+                    .done(function () {
+                        openPath(parentPath(path));
+                    })
+                    .fail(function () {
+                        alert("폴더 삭제에 실패했습니다");
+                    })
+            }
+        }
+
+        function newDirectory(path) {
+            var name = window.prompt("새 폴더 이름:")
+            if (path)
+                $.post("/newDirectory", { path: path, name: name })
+                    .done(function () {
+                        openPath(path);
+                    })
+                    .fail(function () {
+                        alert("폴더 생성에 실패했습니다");
+                    })
+        }
+
+        function clearTable(table, path) {
+            table.innerHTML = `<tr>
+                <th class="file_name">이름</th>
+                <th class="file_modified">수정한 날짜</th>
+                <th class="file_stat">유형</th>
+                <th class="file_size">크기</th>
+                <th class="file_icons"> </th>
+            </tr>`;
+
+            if (path != "C:/Users/hunis/web/files") {
+                var tr = document.createElement('tr');
+                tr.innerHTML += `<td class="td_folder" onclick="openPath('${parentPath(path)}')">../</td>`;
+                tr.innerHTML += `<td></td>`;
+                tr.innerHTML += `<td></td>`;
+                tr.innerHTML += `<td></td>`;
+                tr.innerHTML += `<td></td>`;
+                table.append(tr);
+            }
+        }
+
+        function convertFileSize(size) {
+            if (size / (1028 * 1028 * 1028) > 1) {
+                var sizeStr = (size / (1028 * 1028 * 1028)).toFixed(2) + " GB";
+            } else if (size / (1028 * 1028) > 1) {
+                var sizeStr = (size / (1028 * 1028)).toFixed(2) + " MB";
+            } else {
+                var sizeStr = (size / 1028).toFixed(2) + " KB";
+            }
+
+            return sizeStr;
+        }
+
+        function convertDate(date) {
+            return new Date(date).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        }
+
+        function parentPath(path) {
+            let parts = path.split('/');
+            parts.pop();
+            let parentPath = parts.join('/');
+            if (parentPath === '') {
+                parentPath = '/';
+            }
+
+            return parentPath;
+        }
+
+    </script>
+</body>
+
+</html>
