@@ -162,7 +162,7 @@
     </style>
 </head>
 
-<body ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+<body ondragover="handleDragOver(event)" ondrop="handleDrop(event)" onmouseup="handleMouseClick(event)">
     <header>
         <h1>🗂️ 청년합숙소 저장소</h1>
         <div id="panel">
@@ -198,42 +198,17 @@
             if (event) {
                 event.preventDefault();
                 var files = event.dataTransfer.files;
-                handleFiles(files);
+                uploadFile(event.dataTransfer, currPath);
             }
 
         }
 
-        function handleFiles(files) {
-            for (var i = 0; i < files.length; i++) {
-                var file = files[i];
-                uploadDragDrop(file);
-            }
-        }
-
-        function uploadDragDrop(file) {
-            if (verified) {
-                var formData = new FormData();
-                formData.append('path', currPath)
-                formData.append('file', file);
-
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', '/upload', true);
-                xhr.upload.onprogress = function (e) {
-                    if (e.lengthComputable) {
-                        var percentComplete = (e.loaded / e.total) * 100;
-                        document.getElementById('progress').innerText = '업로드 중: ' + percentComplete.toFixed(2) + '%';
-                    }
-                };
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        alert("파일이 성공적으로 업로드 되었습니다");
-                        document.getElementById('progress').innerText = "";
-                        openPath(currPath);
-                    } else {
-                        alert("파일 업로드에 실패했습니다");
-                    }
-                };
-                xhr.send(formData);
+        function handleMouseClick(event) {
+            if (event && event.button == 3) {
+                if (currPath != "C:/Users/hunis/web/files") {
+                    openPath(parentPath(currPath));
+                }
+                event.preventDefault();
             }
         }
 
@@ -281,7 +256,7 @@
             data.forEach(file => {
                 if (file.stat == "folder") {
                     var tr = document.createElement('tr');
-                    tr.innerHTML += `<td class="td_folder" onclick="openPath('${file.path}')">${file.name}</td>`;
+                    tr.innerHTML += `<td class="td_folder" onclick="openPath('${file.path}')" draggable="true" ondragstart="drag(event, '${file.path}')" ondrop="drop(event, '${file.path}')" ondragover="allowDrop(event)">${file.name}</td>`;
                     tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
                     tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
                     tr.innerHTML += `<td class="file_size"></td>`;
@@ -295,7 +270,7 @@
             data.forEach(file => {
                 if (file.stat == "file") {
                     var tr = document.createElement('tr');
-                    tr.innerHTML += `<td class="td_file" onclick="downloadFile('${file.name}', '${file.path}')">${file.name}</td>`;
+                    tr.innerHTML += `<td class="td_file" onclick="downloadFile('${file.name}', '${file.path}')" draggable="true" ondragstart="drag(event, '${file.path}')">${file.name}</td>`;
                     tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
                     tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
                     tr.innerHTML += `<td class="file_size">${convertFileSize(file.size)}</td>`;
@@ -325,7 +300,6 @@
                 };
                 xhr.onload = function () {
                     if (xhr.status === 200) {
-                        alert("파일이 성공적으로 업로드 되었습니다");
                         document.getElementById('progress').innerText = "";
                         openPath(path);
                     } else {
@@ -334,18 +308,6 @@
                 };
                 xhr.send(formData);
             }
-        }
-
-        function renameFile(filename, path) {
-            var newName = window.prompt("이름 변경:", filename)
-            if (newName)
-                $.post("/rename", { path: path, oldName: filename, newName: newName })
-                    .done(function () {
-                        openPath(path);
-                    })
-                    .fail(function () {
-                        alert("파일 이름 변경에 실패했습니다");
-                    })
         }
 
         function downloadFile(filename, path) {
@@ -394,6 +356,30 @@
                     })
         }
 
+        function renameFile(filename, path) {
+            var newName = window.prompt("이름 변경:", filename)
+            if (newName) {
+                $.post("/rename", { path: path, oldName: filename, newName: newName })
+                    .done(function () {
+                        openPath(path);
+                    })
+                    .fail(function () {
+                        alert("파일 이름 변경에 실패했습니다");
+                    })
+            }
+        }
+
+
+        function moveFile(oldPath, newPath) {
+            $.post("/move", { oldPath: oldPath, newPath: newPath })
+                .done(function () {
+                    openPath(parentPath(oldPath));
+                })
+                .fail(function () {
+                    alert("파일 이동에 실패했습니다");
+                })
+        }
+
         function clearTable(table, path) {
             table.innerHTML = `<tr>
                 <th class="file_name">이름</th>
@@ -405,7 +391,7 @@
 
             if (path != "C:/Users/hunis/web/files") {
                 var tr = document.createElement('tr');
-                tr.innerHTML += `<td class="td_folder" onclick="openPath('${parentPath(path)}')">../</td>`;
+                tr.innerHTML += `<td class="td_folder" onclick="openPath('${parentPath(path)}')" ondrop="drop(event, '${parentPath(path)}')" ondragover="allowDrop(event)">../</td>`;
                 tr.innerHTML += `<td></td>`;
                 tr.innerHTML += `<td></td>`;
                 tr.innerHTML += `<td></td>`;
@@ -439,6 +425,22 @@
             }
 
             return parentPath;
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev, path) {
+            ev.dataTransfer.setData("path", path);
+        }
+
+        function drop(ev, newPath) {
+            ev.preventDefault();
+            var oldPath = ev.dataTransfer.getData("path");
+            if (oldPath != newPath) {
+                moveFile(oldPath, newPath);
+            }
         }
 
     </script>

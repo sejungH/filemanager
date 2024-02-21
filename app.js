@@ -13,7 +13,9 @@ const storage = multer.diskStorage({
         cb(null, req.body.path);
     },
     filename: function (req, file, cb) {
-        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+        // console.log(file.originalname);
+        // file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        // console.log(file.originalname);
         cb(null, file.originalname);
     }
 });
@@ -50,7 +52,8 @@ app.get('/download', (req, res) => {
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
-    console.log('File uploaded: ' + Buffer.from(req.file.originalname, 'latin1').toString('utf8'));
+    // var filename = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    console.log('File uploaded: ' + req.file.originalname);
     res.status(200).send('File uploaded successfully');
 });
 
@@ -80,7 +83,7 @@ app.post('/newDirectory', (req, res) => {
         console.log(`Folder '${req.body.path}/${req.body.name}' created`);
         res.status(200).send(`Folder created successfully`);
     });
-})
+});
 
 app.post('/rename', (req, res) => {
     fs.rename(`${req.body.path}/${req.body.oldName}`, `${req.body.path}/${req.body.newName}`, (err) => {
@@ -91,7 +94,19 @@ app.post('/rename', (req, res) => {
         console.log(`File '${req.body.path}/${req.body.newName}' renamed`);
         res.status(200).send(`File renamed successfully`);
     });
-})
+});
+
+app.post('/move', (req, res) => {
+    var filename = req.body.oldPath.split('/').pop();
+    fs.rename(req.body.oldPath, `${req.body.newPath}/${filename}`, (err) => {
+        if (err) {
+            console.error('Error moving file/folder:', err);
+            return;
+        }
+        console.log(`File '${req.body.newPath}/${filename}' moved`);
+        res.status(200).send(`File moved successfully`);
+    });
+});
 
 app.listen(port, () => {
     console.log(`Application started and Listening on port ${port}`)
