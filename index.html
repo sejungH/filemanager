@@ -18,8 +18,8 @@
 
 <body ondragover="handleDragOver(event)" ondrop="handleDrop(event)" onmouseup="handleMouseClick(event)">
     <header>
-        <h1 onclick="if (verified) { openPath() }"><img src="favicon.ico">청년합숙소 클라우드</h1>
-        <div id="freeSpace">2.00 TB 중 35.32 GB 사용</div>
+        <h1><a href="/"><img src="favicon.ico">청년합숙소 클라우드</a></h1>
+        <div id="freeSpace"></div>
     </header>
     <main>
         <div id="login">
@@ -34,7 +34,7 @@
                 <label for="upload">
                     <div id="upload_btn"></div>
                 </label>
-                <input type="file" name="upload" id="upload" onchange="uploadFile(this, 'C:/Users/hunis/web/files')">
+                <input type="file" name="upload" id="upload" onchange="uploadFile(this)">
             </div>
         </div>
         <table id="fileList"></table>
@@ -42,6 +42,11 @@
     </main>
 
     <script>
+        if (window.sessionStorage.getItem('verified') == 'true') {
+            $("#login").hide();
+            openPath(getPath());
+        }
+
         $("#password").keypress(function (e) {
             if (e.which == 13) {
                 verify($(this).val())

@@ -8,6 +8,7 @@ const { exec } = require('child_process');
 const app = express();
 const port = 443; // http 80, https 443
 const password = "1011";
+const root = "C:/Users/hunis/web/files";
 
 var sslOptions = {
     ca: fs.readFileSync(__dirname + '/ssl/ca_bundle.crt'),
@@ -17,7 +18,7 @@ var sslOptions = {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, req.body.path);
+        cb(null, absPath(req.body.path));
     },
     filename: function (req, file, cb) {
         cb(null, file.originalname);
@@ -47,12 +48,12 @@ app.post('/verify', (req, res) => {
 });
 
 app.post('/files', (req, res) => {
-    var storage = getStorage(req.body.path);
+    var storage = getStorage(absPath(req.body.path));
     res.send(storage);
 });
 
 app.get('/download', (req, res) => {
-    res.sendFile(req.query.path);
+    res.download(absPath(req.query.path));
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -61,7 +62,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 });
 
 app.post('/delete', (req, res) => {
-    fs.unlink(req.body.path, (err) => {
+    fs.unlink(absPath(req.body.path), (err) => {
         if (err) {
             console.error('Error deleting file:', err);
             return;
@@ -72,13 +73,13 @@ app.post('/delete', (req, res) => {
 });
 
 app.post('/deleteDirectory', (req, res) => {
-    fs.rmSync(req.body.path, { recursive: true, force: true });
+    fs.rmSync(absPath(req.body.path), { recursive: true, force: true });
     console.log(`Folder '${req.body.path}' deleted`);
     res.status(200).send(`Folder deleted successfully`);
 });
 
 app.post('/newDirectory', (req, res) => {
-    fs.mkdir(`${req.body.path}/${req.body.name}`, { recursive: true }, (err) => {
+    fs.mkdir(`${absPath(req.body.path)}/${req.body.name}`, { recursive: true }, (err) => {
         if (err) {
             console.error('Error creating folder:', err);
             return;
@@ -89,7 +90,7 @@ app.post('/newDirectory', (req, res) => {
 });
 
 app.post('/rename', (req, res) => {
-    fs.rename(`${req.body.path}/${req.body.oldName}`, `${req.body.path}/${req.body.newName}`, (err) => {
+    fs.rename(`${absPath(req.body.path)}/${req.body.oldName}`, `${absPath(req.body.path)}/${req.body.newName}`, (err) => {
         if (err) {
             console.error('Error renaming folder:', err);
             return;
@@ -100,8 +101,8 @@ app.post('/rename', (req, res) => {
 });
 
 app.post('/move', (req, res) => {
-    var filename = req.body.oldPath.split('/').pop();
-    fs.rename(req.body.oldPath, `${req.body.newPath}/${filename}`, (err) => {
+    var filename = absPath(req.body.oldPath).split('/').pop();
+    fs.rename(req.body.oldPath, `${absPath(req.body.newPath)}/${filename}`, (err) => {
         if (err) {
             console.error('Error moving file/folder:', err);
             return;
@@ -151,7 +152,7 @@ function getStorage(root, list = []) {
         if (stat.isDirectory()) {
             node.stat = "folder";
             node.name = file;
-            node.path = convertPath(filePath);
+            node.path = relPath(convertPath(filePath));
             node.modified = stat.mtime;
             node.size = stat.size;
             node.list = getStorage(filePath, node.list);
@@ -159,7 +160,7 @@ function getStorage(root, list = []) {
         } else {
             node.stat = "file";
             node.name = file;
-            node.path = convertPath(filePath);
+            node.path = relPath(convertPath(filePath));
             node.modified = stat.mtime;
             node.size = stat.size;
             list.push(node);
@@ -171,4 +172,13 @@ function getStorage(root, list = []) {
 
 function convertPath(path) {
     return path.replaceAll('\\', '/');
+}
+
+function relPath(path) {
+    var parts = path.split(root);
+    return parts.pop();
+}
+
+function absPath(path) {
+    return root + path;
 }

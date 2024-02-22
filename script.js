@@ -1,24 +1,23 @@
-var verified = false;
-var currPath = "C:/Users/hunis/web/files";
+var currPath = "";
 
 function verify(password) {
     $.post("/verify", { 'password': password })
         .done(function () {
             $("#login").hide();
-            openPath();
-            verified = true;
+            openPath(getPath());
+            window.sessionStorage.setItem('verified', 'true');
         })
         .fail(function () {
             console.log("Login Failed");
         })
 }
 
-function openPath(path = "C:/Users/hunis/web/files") {
+function openPath(path = "") {
     currPath = path;
 
     var path_div = document.getElementById("path");
     path_div.style.display = "inline-block";
-    path_div.innerText = path;
+    path_div.innerText = path == "" ? "/" : path;
 
     var panel = document.getElementById("panel")
     panel.style.display = "inline-block";
@@ -46,7 +45,9 @@ function displayStorage(data, path) {
     data.forEach(file => {
         if (file.stat == "folder") {
             var tr = document.createElement('tr');
-            tr.innerHTML += `<td class="td_folder" onclick="openPath('${file.path}')" draggable="true" ondragstart="drag(event, '${file.path}')" ondrop="drop(event, '${file.path}')" ondragover="allowDrop(event)">${file.name}</td>`;
+            tr.innerHTML += `<td class="td_folder" draggable="true" ondragstart="drag(event, '${file.path}')" ondrop="drop(event, '${file.path}')" ondragover="allowDrop(event)">
+                                <span class="folder_icon">📂</span><a href="?path=${file.path}">${file.name}</a>
+                            </td>`;
             tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
             tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
             tr.innerHTML += `<td class="file_size"></td>`;
@@ -60,7 +61,9 @@ function displayStorage(data, path) {
     data.forEach(file => {
         if (file.stat == "file") {
             var tr = document.createElement('tr');
-            tr.innerHTML += `<td class="td_file" onclick="downloadFile('${file.name}', '${file.path}')" draggable="true" ondragstart="drag(event, '${file.path}')">${file.name}</td>`;
+            tr.innerHTML += `<td class="td_file" draggable="true" ondragstart="drag(event, '${file.path}')">
+                                <span class="file_icon">${fileIcon(file.name)}</span><a href="/download?path=${file.path}" download="${file.name}">${file.name}</a>
+                            </td>`;
             tr.innerHTML += `<td class="file_modified">${convertDate(file.modified)}</td>`;
             tr.innerHTML += `<td class="file_stat">${file.stat}</td>`;
             tr.innerHTML += `<td class="file_size">${convertFileSize(file.size)}</td>`;
@@ -73,7 +76,7 @@ function displayStorage(data, path) {
     })
 }
 
-function uploadFile(event, path) {
+function uploadFile(event, path = "") {
     for (var i = 0; i < event.files.length; i++) {
         var file = event.files[i];
         console.log(file);
@@ -99,16 +102,6 @@ function uploadFile(event, path) {
         };
         xhr.send(formData);
     }
-}
-
-function downloadFile(filename, path) {
-    var link = document.createElement('a');
-    link.href = "/download?path=" + path;
-    link.download = filename;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 function deleteFile(path) {
@@ -161,7 +154,6 @@ function renameFile(filename, path) {
     }
 }
 
-
 function moveFile(oldPath, newPath) {
     $.post("/move", { oldPath: oldPath, newPath: newPath })
         .done(function () {
@@ -181,15 +173,25 @@ function clearTable(table, path) {
                 <th class="file_icons"> </th>
             </tr>`;
 
-    if (path != "C:/Users/hunis/web/files") {
+    if (path != "" && path != "/") {
         var tr = document.createElement('tr');
-        tr.innerHTML += `<td class="td_folder" onclick="openPath('${parentPath(path)}')" ondrop="drop(event, '${parentPath(path)}')" ondragover="allowDrop(event)">../</td>`;
+        tr.innerHTML += `<td class="td_folder" ondrop="drop(event, '${parentPath(path)}')" ondragover="allowDrop(event)">
+                            <span class="folder_icon">📂</span><a href="?path=${parentPath(path)}">../</a>
+                        </td>`;
         tr.innerHTML += `<td></td>`;
         tr.innerHTML += `<td></td>`;
         tr.innerHTML += `<td></td>`;
         tr.innerHTML += `<td></td>`;
         table.append(tr);
     }
+}
+
+/** 헬퍼 메소드 */
+
+function getPath() {
+    const queryParams = new URLSearchParams(window.location.search);
+    var path = queryParams.get('path');
+    return path == null ? "" : path;
 }
 
 function convertFileSize(size) {
@@ -220,6 +222,26 @@ function parentPath(path) {
     return parentPath;
 }
 
+function fileIcon(filename) {
+    var parts = filename.split('.');
+    var ext = parts.pop();
+    if (["mp4", "mkv", "mov", "avi", "ts"].includes(ext.toLowerCase())) {
+        return "🎬";
+    } else if (["png", "jpg", "jpeg", "gif", "ts", "ico", "svg", "webp", "jfif"].includes(ext.toLowerCase())) {
+        return "🖼️";
+    } else if (["mp3", "aac", "flac", "wav"].includes(ext.toLowerCase())) {
+        return "🎵";
+    } else if (["zip", "tar", "gz", "7z", "jar"].includes(ext.toLowerCase())) {
+        return "📦";
+    } else if (["exe", "msi", "bat"].includes(ext.toLowerCase())) {
+        return "💿";
+    } else if (["ini", "inf"].includes(ext.toLowerCase())) {
+        return "⚙️";
+    } else {
+        return "📄";
+    }
+}
+
 
 /* 폴더 이동 */
 
@@ -240,7 +262,7 @@ function drop(ev, newPath) {
 }
 
 
-/* 파일 드래그 & 드롭 */
+/** 파일 드래그 & 드롭 */
 
 function handleDragOver(event) {
     if (event) {
@@ -252,22 +274,24 @@ function handleDragOver(event) {
 function handleDrop(event) {
     if (event) {
         event.preventDefault();
-        var files = event.dataTransfer.files;
         uploadFile(event.dataTransfer, currPath);
     }
 
 }
 
+/** 마우스 뒤로가기 버튼 */
+
 function handleMouseClick(event) {
     if (event && event.button == 3) {
-        if (currPath != "C:/Users/hunis/web/files") {
-            openPath(parentPath(currPath));
+        if (currPath != "" && currPath != "/") {
+            location.href = window.origin + "?path=" + parentPath(currPath);
         }
         event.preventDefault();
     }
 }
 
 /** 여유 공간 계산 */
+
 function getFreeSpace() {
     $.post("/disk")
         .done(function (response) {

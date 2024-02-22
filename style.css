@@ -20,23 +20,22 @@ td {
 
 .td_folder,
 .td_file {
-    cursor: pointer;
     width: 500px;
 }
 
-.td_folder:hover,
-.td_file:hover {
+.td_folder a,
+.td_file a {
+    color: initial;
+    text-decoration: none;
+}
+
+.td_folder a:hover,
+.td_file a:hover {
     text-decoration: underline;
 }
 
-.td_folder::before {
-    content: "📂";
-    margin-right: 10px;
-    display: inline-block;
-}
-
-.td_file::before {
-    content: "📜";
+.folder_icon,
+.file_icon {
     margin-right: 10px;
     display: inline-block;
 }
@@ -68,7 +67,7 @@ td {
 }
 
 .rename_icon::before {
-    content: "✏️";
+    content: "📝";
 }
 
 .delete_icon::before {
@@ -111,6 +110,12 @@ header h1 {
     width: 700px;
     height: 50px;
     margin: 0;
+}
+
+header h1 a {
+    display: contents;
+    color: initial;
+    text-decoration: none;
 }
 
 header h1 img {
