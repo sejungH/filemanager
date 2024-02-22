@@ -279,17 +279,6 @@ function handleDrop(event) {
 
 }
 
-/** 마우스 뒤로가기 버튼 */
-
-function handleMouseClick(event) {
-    if (event && event.button == 3) {
-        if (currPath != "" && currPath != "/") {
-            location.href = window.origin + "?path=" + parentPath(currPath);
-        }
-        event.preventDefault();
-    }
-}
-
 /** 여유 공간 계산 */
 
 function getFreeSpace() {

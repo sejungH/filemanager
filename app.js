@@ -101,8 +101,8 @@ app.post('/rename', (req, res) => {
 });
 
 app.post('/move', (req, res) => {
-    var filename = absPath(req.body.oldPath).split('/').pop();
-    fs.rename(req.body.oldPath, `${absPath(req.body.newPath)}/${filename}`, (err) => {
+    var filename = req.body.oldPath.split('/').pop();
+    fs.rename(absPath(req.body.oldPath), `${absPath(req.body.newPath)}/${filename}`, (err) => {
         if (err) {
             console.error('Error moving file/folder:', err);
             return;
