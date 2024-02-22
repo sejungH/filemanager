@@ -1,0 +1,192 @@
+body {
+    font-family: "Nanum Gothic", sans-serif;
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+}
+
+#fileList {
+    width: 1000px;
+}
+
+#fileList th {
+    text-align: left;
+}
+
+#fileList th,
+td {
+    padding: 5px 0;
+}
+
+.td_folder,
+.td_file {
+    cursor: pointer;
+    width: 500px;
+}
+
+.td_folder:hover,
+.td_file:hover {
+    text-decoration: underline;
+}
+
+.td_folder::before {
+    content: "📂";
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.td_file::before {
+    content: "📜";
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.file_name {
+    width: 500px;
+}
+
+.file_modified {
+    width: 250px;
+}
+
+.file_stat {
+    width: 80px;
+}
+
+.file_size {
+    width: 100px;
+}
+
+.file_icons {
+    width: 70px;
+    text-align: center;
+}
+
+.rename_icon,
+.delete_icon {
+    cursor: pointer;
+}
+
+.rename_icon::before {
+    content: "✏️";
+}
+
+.delete_icon::before {
+    content: "🗑️";
+}
+
+#login label {
+    display: inline-block;
+}
+
+label[for=password] {
+    font-size: 30px;
+    vertical-align: bottom;
+}
+
+#password {
+    padding: 10px;
+    width: 330px;
+    border-radius: 10px;
+    border: 1px solid #aaa;
+    background-color: #eee;
+}
+
+#password:focus {
+    outline: none;
+}
+
+header {
+    padding: 20px;
+    width: 1000px;
+}
+
+header h1 {
+    font-family: "Sunflower", sans-serif;
+    font-weight: bold;
+    font-size: 40px;
+    user-select: none;
+    cursor: pointer;
+    display: inline-flex;
+    width: 700px;
+    height: 50px;
+    margin: 0;
+}
+
+header h1 img {
+    height: 50px;
+    margin-right: 10px;
+}
+
+main {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    width: 1000px;
+}
+
+#freeSpace {
+    float: right;
+    text-align: right;
+    font-weight: bold;
+    display: block;
+    height: 50px;
+    width: 300px;
+    display: none;
+}
+
+#tools {
+    margin-bottom: 10px;
+}
+
+#path {
+    font-family: "Nanum Gothic Coding", monospace;
+    display: none;
+    background-color: #eee;
+    padding: 0 10px;
+    width: 830px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 10px;
+}
+
+#panel {
+    width: 150px;
+    height: 40px;
+    text-align: right;
+    float: right;
+    display: none;
+    user-select: none;
+}
+
+#panel label {
+    display: inline-block;
+}
+
+#refresh_btn,
+#newdir_btn,
+#upload_btn {
+    font-size: 30px;
+    vertical-align: top;
+    display: inline-block;
+    cursor: pointer;
+}
+
+#newdir_btn::before {
+    content: "📁";
+}
+
+#upload_btn::before {
+    content: "⬆️";
+}
+
+#upload {
+    display: none;
+}
+
+#progress {
+    width: 1000px;
+    text-align: right;
+    padding-top: 10px;
+    color: red;
+}

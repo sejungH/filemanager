@@ -1,21 +1,25 @@
 const express = require('express');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { kMaxLength } = require('buffer');
+const { exec } = require('child_process');
 
 const app = express();
-const port = 80;
+const port = 443; // http 80, https 443
 const password = "1011";
+
+var sslOptions = {
+    ca: fs.readFileSync(__dirname + '/ssl/ca_bundle.crt'),
+    key: fs.readFileSync(__dirname + '/ssl/private.key'),
+    cert: fs.readFileSync(__dirname + '/ssl/certificate.crt')
+};
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, req.body.path);
     },
     filename: function (req, file, cb) {
-        // console.log(file.originalname);
-        // file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
-        // console.log(file.originalname);
         cb(null, file.originalname);
     }
 });
@@ -52,7 +56,6 @@ app.get('/download', (req, res) => {
 });
 
 app.post('/upload', upload.single('file'), (req, res) => {
-    // var filename = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
     console.log('File uploaded: ' + req.file.originalname);
     res.status(200).send('File uploaded successfully');
 });
@@ -108,9 +111,34 @@ app.post('/move', (req, res) => {
     });
 });
 
-app.listen(port, () => {
+app.post('/disk', (req, res) => {
+    exec('wmic logicaldisk get size,freespace,caption', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+
+        // 결과 파싱
+        const lines = stdout.split('\r\n');
+        const diskInfo = lines.slice(1, lines.length - 1).map(line => {
+            const [caption, freeSpace, size] = line.trim().split(/\s+/);
+            return { caption, freeSpace, size };
+        });
+
+        res.send(diskInfo);
+    });
+});
+
+app.get('/.well-known/pki-validation/EE49613F090DCAE945A113423DA84ED6.txt', (req, res) => {
+    res.sendFile(__dirname + '/.well-known/pki-validation/EE49613F090DCAE945A113423DA84ED6.txt');
+});
+
+https.createServer(sslOptions, app).listen(port, () => {
     console.log(`Application started and Listening on port ${port}`)
 });
+
+
+/** Helper */
 
 function getStorage(root, list = []) {
     const files = fs.readdirSync(root);
