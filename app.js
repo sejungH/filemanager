@@ -36,7 +36,11 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.redirect('/files');
+});
+
+app.get('/files/*', (req, res) => {
+    res.sendFile(__dirname + '/files.html');
 });
 
 app.post('/verify', (req, res) => {

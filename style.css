@@ -7,26 +7,30 @@ body {
 
 #fileList {
     width: 1000px;
+    border: none;
+    border-collapse: collapse;
 }
 
 #fileList th {
     text-align: left;
+    padding: 10px 5px;
 }
 
-#fileList th,
-td {
-    padding: 5px 0;
+#fileList td {
+    padding: 5px;
+}
+
+#fileList tr:hover td {
+    background-color: #eee;
+}
+
+#fileList tr.selected td {
+    background-color: #ddd;
 }
 
 .td_folder,
 .td_file {
     width: 500px;
-}
-
-.td_folder a,
-.td_file a {
-    color: initial;
-    text-decoration: none;
 }
 
 .td_folder a:hover,
@@ -45,33 +49,15 @@ td {
 }
 
 .file_modified {
-    width: 250px;
+    width: 300px;
 }
 
 .file_stat {
-    width: 80px;
+    width: 100px;
 }
 
 .file_size {
     width: 100px;
-}
-
-.file_icons {
-    width: 70px;
-    text-align: center;
-}
-
-.rename_icon,
-.delete_icon {
-    cursor: pointer;
-}
-
-.rename_icon::before {
-    content: "📝";
-}
-
-.delete_icon::before {
-    content: "🗑️";
 }
 
 #login label {
@@ -149,14 +135,14 @@ main {
     display: none;
     background-color: #eee;
     padding: 0 10px;
-    width: 830px;
+    width: 730px;
     height: 40px;
     line-height: 40px;
     border-radius: 10px;
 }
 
 #panel {
-    width: 150px;
+    width: 250px;
     height: 40px;
     text-align: right;
     float: right;
@@ -165,16 +151,24 @@ main {
 }
 
 #panel label {
+    font-size: 30px;
     display: inline-block;
+    vertical-align: top;
+}
+
+#rename_btn,
+#delete_btn {
+    opacity: 0.3;
 }
 
 #refresh_btn,
 #newdir_btn,
 #upload_btn {
-    font-size: 30px;
-    vertical-align: top;
-    display: inline-block;
     cursor: pointer;
+}
+
+#refresh_btn::before {
+    content: "🔃";
 }
 
 #newdir_btn::before {
@@ -183,6 +177,14 @@ main {
 
 #upload_btn::before {
     content: "⬆️";
+}
+
+#rename_btn::before {
+    content: "📝";
+}
+
+#delete_btn::before {
+    content: "🗑️";
 }
 
 #upload {
@@ -194,4 +196,29 @@ main {
     text-align: right;
     padding-top: 10px;
     color: red;
+}
+
+#context-menu {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    width: 150px;
+}
+
+#context-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#context-menu ul li {
+    display: block;
+    padding: 5px 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#context-menu ul li:hover {
+    background-color: #eee;
 }

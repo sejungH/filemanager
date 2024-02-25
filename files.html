@@ -12,13 +12,13 @@
         rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript" src="/scripts/files.js"></script>
     <title>청년합숙소 클라우드</title>
 </head>
 
-<body ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+<body ondragover="handleDragOver(event)" ondrop="handleDrop(event)" onclick="clickEmpty(event)" oncontextmenu="showContextMenu(event)">
     <header>
-        <h1><a href="/"><img src="favicon.ico">청년합숙소 클라우드</a></h1>
+        <h1><a href="/files"><img src="/favicon.ico">청년합숙소 클라우드</a></h1>
         <div id="freeSpace"></div>
     </header>
     <main>
@@ -29,17 +29,19 @@
         <div id="tools">
             <div id="path"></div>
             <div id="panel">
-                <label id="refresh_btn">🔄</label>
+                <label id="refresh_btn"></label>
                 <label id="newdir_btn"></label>
-                <label for="upload">
-                    <div id="upload_btn"></div>
-                </label>
-                <input type="file" name="upload" id="upload" onchange="uploadFile(this)">
+                <label id="upload_btn" for="upload"></label>
+                <input type="file" name="upload" id="upload" multiple>
+                <label id="rename_btn"></label>
+                <label id="delete_btn"></label>
             </div>
         </div>
         <table id="fileList"></table>
         <div id="progress"></div>
     </main>
+
+    <div id="context-menu"></div>
 
     <script>
         if (window.sessionStorage.getItem('verified') == 'true') {
